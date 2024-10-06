@@ -19,7 +19,7 @@
 extern QWORD g_WeChatWinDllAddr;
 
 // 接收消息call所在地址
-#define OS_RECV_MSG_CALL    0x2205510
+#define OS_RECV_MSG_CALL    0x2141E80
 
 // 参数 消息ID 相对地址
 #define OS_RECV_MSG_ID      0x30
