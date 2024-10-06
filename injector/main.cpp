@@ -129,7 +129,7 @@ INT_PTR CALLBACK DialogProc(HWND hwndDlg, UINT   uMsg, WPARAM wParam, LPARAM lPa
         {
             WxInitInject(false);
             if (injected) {
-                SetDlgItemTextA(hwndDlg, ID_DLL_NAME, "已注入 WeChatWin.dll");
+                SetDlgItemTextA(hwndDlg, ID_DLL_NAME, "已注入到 WeChatWin.dll");
             }
         }
         if (wParam == UN_DLL && injected)
