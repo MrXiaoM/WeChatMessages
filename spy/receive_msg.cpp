@@ -21,17 +21,17 @@ extern QWORD g_WeChatWinDllAddr;
 // 接收消息call所在地址
 #define OS_RECV_MSG_CALL    0x2205510
 
-// 参数 消息ID 相对地址 1
+// 参数 消息ID 相对地址
 #define OS_RECV_MSG_ID      0x30
-// 参数 消息类型 相对地址 1
+// 参数 消息类型 相对地址
 #define OS_RECV_MSG_TYPE    0x38
-// 参数 是否自身 相对地址 1
+// 参数 是否自身 相对地址
 #define OS_RECV_MSG_SELF    0x3C
-// 参数 时间戳 相对地址 1
+// 参数 时间戳 相对地址
 #define OS_RECV_MSG_TS      0x44
-// 参数 房间ID 相对地址 1
+// 参数 房间ID 相对地址
 #define OS_RECV_MSG_ROOMID  0x48
-// 参数 消息内容 相对地址 1
+// 参数 消息内容 相对地址
 #define OS_RECV_MSG_CONTENT 0x88
 // 参数 wxid 相对地址
 #define OS_RECV_MSG_WXID    0x240 // 0x80
@@ -41,8 +41,8 @@ extern QWORD g_WeChatWinDllAddr;
 #define OS_RECV_MSG_THUMB   0x280 // 0xC0
 // 参数 额外信息 相对地址
 #define OS_RECV_MSG_EXTRA   0x2A0 // 0xE0
-// 参数 XML 相对地址 1
-#define OS_RECV_MSG_XML     0x308 // 
+// 参数 XML 相对地址
+#define OS_RECV_MSG_XML     0x308 // 0x148
 
 typedef QWORD (*RecvMsg_t)(QWORD, QWORD);
 
