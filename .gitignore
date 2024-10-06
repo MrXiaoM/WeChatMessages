@@ -1,0 +1,7 @@
+/.vs/*
+/packages/*
+/Out/*
+x64/*
+*/x64/*
+*.exe
+*.dll
