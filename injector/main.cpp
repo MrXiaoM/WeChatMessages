@@ -20,8 +20,7 @@ static WCHAR spyDllPath[MAX_PATH] = { 0 };
 
 static int GetDllPath(bool debug, wchar_t *dllPath)
 {
-    GetModuleFileName(GetModuleHandle(WCFSDKDLL), dllPath, MAX_PATH);
-    PathRemoveFileSpec(dllPath);
+    lstrcpy(dllPath, String2Wstring(std::filesystem::current_path().string()).c_str());
     if (debug) {
         PathAppend(dllPath, WCFSPYDLL_DEBUG);
     } else {

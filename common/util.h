@@ -6,7 +6,6 @@
 
 #define WECHAREXE       L"WeChat.exe"
 #define WECHATWINDLL    L"WeChatWin.dll"
-#define WCFSDKDLL       L"sdk.dll"
 #define WCFSPYDLL       L"spy.dll"
 #define WCFSPYDLL_DEBUG L"spy_debug.dll"
 
