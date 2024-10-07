@@ -17,6 +17,7 @@ static BOOL injected              = false;
 static HANDLE wcProcess           = NULL;
 static HMODULE spyBase            = NULL;
 static WCHAR spyDllPath[MAX_PATH] = { 0 };
+static HWND dlg                   = NULL;
 
 static int GetDllPath(bool debug, wchar_t *dllPath)
 {
@@ -29,7 +30,7 @@ static int GetDllPath(bool debug, wchar_t *dllPath)
 
     if (!PathFileExists(dllPath)) {
         LOG_WARN("DLL 文件不存在: {}", Wstring2String(dllPath));
-        // MessageBox(NULL, dllPath, L"文件不存在", 0);
+        MessageBox(NULL, dllPath, L"文件不存在", 0);
         return ERROR_FILE_NOT_FOUND;
     }
 
@@ -52,7 +53,7 @@ int WxInitInject(bool debug)
     status = OpenWeChat(&wcPid, &firstOpen);
     if (status != 0) {
         LOG_WARN("[WxInitInject] 微信打开失败");
-        MessageBox(NULL, L"打开微信失败", L"WxInitSDK", 0);
+        MessageBox(NULL, L"打开微信失败", L"WxInitInject", 0);
         return status;
     }
 
@@ -60,18 +61,19 @@ int WxInitInject(bool debug)
 
     if (!IsProcessX64(wcPid)) {
         LOG_WARN("[WxInitInject] 只支持 64 位微信");
-        MessageBox(NULL, L"只支持 64 位微信", L"WxInitSDK", 0);
+        MessageBox(NULL, L"只支持 64 位微信", L"WxInitInject", 0);
         return -1;
     }
 
     if (firstOpen) {
-        LOG_INFO("[WxInitInject] 等待微信启动");
+        LOG_INFO("[WxInitInject] 正在等待微信启动");
+        if (dlg != NULL) SetDlgItemTextA(dlg, ID_DLL_NAME, "正在等待微信启动");
         Sleep(2000);
     }
     wcProcess = InjectDll(wcPid, spyDllPath, &spyBase);
     if (wcProcess == NULL) {
         LOG_WARN("[WxInitInject] 注入失败");
-        MessageBox(NULL, L"注入失败", L"WxInitSDK", 0);
+        MessageBox(NULL, L"注入失败", L"WxInitInject", 0);
         return -1;
     }
 
@@ -81,11 +83,11 @@ int WxInitInject(bool debug)
 
     if (!CallDllFuncEx(wcProcess, spyDllPath, spyBase, "InitSpy", (LPVOID)&pp, sizeof(PortPath_t), NULL)) {
         LOG_WARN("[WxInitInject] 初始化失败");
-        MessageBox(NULL, L"初始化失败", L"WxInitSDK", 0);
+        MessageBox(NULL, L"初始化失败", L"WxInitInject", 0);
         return -1;
     }
 
-    LOG_INFO("注入成功!");
+    LOG_INFO("注入完成! 详细信息请见 spy.dll 输出日志");
 
     injected = true;
     return 0;
@@ -105,7 +107,7 @@ int WxDestroyInject()
         return -3; // TODO: Unify error codes
     }
 
-    LOG_INFO("已取消注入并卸载 DLL");
+    LOG_INFO("[WxDestroyInject] 已取消注入并卸载 DLL");
     injected = false;
     return 0;
 }
@@ -118,6 +120,7 @@ INT_PTR CALLBACK DialogProc(HWND hwndDlg, UINT   uMsg, WPARAM wParam, LPARAM lPa
     switch (uMsg)
     {
     case WM_INITDIALOG:
+        dlg = hwndDlg;
         wcscat_s(title, SUPPORT_VERSION);
         SetWindowTextW(hwndDlg, title);
         SetDlgItemTextA(hwndDlg, ID_DLL_NAME, "软件已启动");
