@@ -18,7 +18,7 @@
 #define GET_WSTRING_FROM_P(addr) ((WCHAR *)(addr))
 
 typedef struct PortPath {
-    int port;
+    char baseUrl[MAX_PATH];
     char path[MAX_PATH];
 } PortPath_t;
 

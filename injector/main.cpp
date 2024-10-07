@@ -78,7 +78,7 @@ int WxInitInject(bool debug)
     }
 
     PortPath_t pp = { 0 };
-    pp.port = 8081;
+    strcpy_s(pp.baseUrl, MAX_PATH, "http://127.0.0.1:8081/");
     sprintf_s(pp.path, MAX_PATH, "%s", std::filesystem::current_path().string().c_str());
 
     if (!CallDllFuncEx(wcProcess, spyDllPath, spyBase, "InitSpy", (LPVOID)&pp, sizeof(PortPath_t), NULL)) {

@@ -6,6 +6,7 @@
 #include <mutex>
 #include <queue>
 
+#include "spy.h"
 #include "log.h"
 #include "receive_msg.h"
 #include "util.h"
@@ -112,6 +113,7 @@ static void notice(string content)
     long res_code = 0;
     const char* postContent = content.c_str();
     struct curl_slist* header = NULL;
+    char url[MAX_PATH];
     
     res = curl_global_init(CURL_GLOBAL_DEFAULT);
     if (res != CURLE_OK)
@@ -121,7 +123,10 @@ static void notice(string content)
     if (curl) {
         LOG_INFO("Message received: {}", content);
 
-        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8081/api/receive");
+        strcpy_s(url, MAX_PATH, baseUrl);
+        strcat_s(url, MAX_PATH, "api/receive");
+
+        curl_easy_setopt(curl, CURLOPT_URL, url);
         
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postContent);
