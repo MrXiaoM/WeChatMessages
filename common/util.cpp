@@ -52,48 +52,84 @@ string GB2312ToUtf8(const char *gb2312)
     return s;
 }
 
-static int GetWeChatPath(wchar_t *path)
+static int GetWeChatPath0(wchar_t* path, HKEY parent, string parentStr, WCHAR *prefix)
 {
-    int ret   = -1, ch, i = 0;
-    FILE* file;
-    errno_t err;
-
-    err = fopen_s(&file, "wechat_path.txt", "r");
-    if (err == 0) {
-        while ((ch = fgetc(file)) != EOF) {
-            path[i++] = (wchar_t) ch;
-        }
-        path[i] = '\0';
-        fclose(file);
-        return ERROR_SUCCESS;
-    }
-
+    int ret = -1;
     HKEY hKey = NULL;
-    // HKEY_CURRENT_USER\Software\Tencent\WeChat InstallPath = xx
-    if (ERROR_SUCCESS != RegOpenKey(HKEY_CURRENT_USER, L"Software\\Tencent\\WeChat", &hKey)) {
-        LOG_INFO("获取微信路径 (HKEY_CURRENT_USER) 失败，请尝试在注册表添加 Software/Tencent/WeChat 手动添加 InstallPath 为微信安装路径 (不包括.exe的路径)，或者将路径写入 wechat_path.txt 文件");
-        ret = GetLastError();
-        return ret;
-    }
-
-    DWORD Type   = REG_SZ;
+    WCHAR p1[MAX_PATH] = L"";
+    DWORD Type = REG_SZ;
     DWORD cbData = MAX_PATH * sizeof(WCHAR);
-    if (ERROR_SUCCESS != RegQueryValueEx(hKey, L"InstallPath", 0, &Type, (LPBYTE)path, &cbData)) {
-        LOG_INFO("获取微信路径 (InstallPath) 失败");
-        ret = GetLastError();
-        goto __exit;
+    if (prefix != NULL)
+    {
+        lstrcpy(p1, prefix);
+        lstrcat(p1, L"\\");
     }
+    lstrcat(p1, L"Software\\Tencent\\WeChat");
+    // HKEY_CURRENT_USER\Software\Tencent\WeChat InstallPath = xx
+    if (ERROR_SUCCESS == RegOpenKey(parent, p1, &hKey))
+    {
+        if (ERROR_SUCCESS == RegQueryValueEx(hKey, L"InstallPath", 0, &Type, (LPBYTE)path, &cbData))
+        {
+            ret = ERROR_SUCCESS;
+            goto __exit;
+        }
+    }
+    LOG_INFO("未找到");
+    if (hKey) RegCloseKey(hKey);
+    
+    if (prefix != NULL)
+    {
+        lstrcpy(p1, prefix);
+        lstrcat(p1, L"\\");
+    }
+    lstrcat(p1, L"Software\\Tencent\\bugReport\\WechatWindows");
 
-    if (path != NULL) {
+    // HKEY_CURRENT_USER\Software\Tencent\bugReport\WechatWindows InstallDir = xx
+    if (ERROR_SUCCESS == RegOpenKey(parent, p1, &hKey))
+    {
+        if (ERROR_SUCCESS == RegQueryValueEx(hKey, L"InstallDir", 0, &Type, (LPBYTE)path, &cbData))
+        {
+            if (path) PathRemoveFileSpec(path);
+            ret = ERROR_SUCCESS;
+            goto __exit;
+        }
+    }
+    if (prefix == NULL) LOG_WARN("从注册表 ({}) 读取微信路径失败", parentStr);
+    ret = GetLastError();
+__exit:
+    if (ret == ERROR_SUCCESS && path != NULL) {
         PathAppend(path, WECHAREXE);
     }
+    if (hKey) RegCloseKey(hKey);
+    
+    return ret;
+}
 
-__exit:
-    if (hKey) {
-        RegCloseKey(hKey);
+static int GetWeChatPath(wchar_t* path)
+{
+    int ret = -1;
+    HKEY hUsers = NULL;
+    DWORD dwIndex = 0;
+    WCHAR szName[MAX_PATH] = L"";
+    WCHAR name[MAX_PATH] = L"";
+    DWORD cchName = MAX_PATH;
+
+    if (ERROR_SUCCESS != RegOpenKey(HKEY_USERS, L"", &hUsers)) {
+        LOG_WARN("读取注册表 (HKEY_USERS) 失败，正在尝试使用旧方法读取微信路径");
+        return GetWeChatPath0(path, HKEY_CURRENT_USER, "HKEY_CURRENT_USER", NULL);
+    }
+    if (hUsers)
+    {
+        while (ERROR_SUCCESS == RegEnumKeyEx(hUsers, dwIndex++, szName, &cchName, NULL, NULL, NULL, NULL))
+        {
+            cchName = MAX_PATH;
+            ret = GetWeChatPath0(path, HKEY_USERS, "HKEY_USERS", szName);
+            if (ERROR_SUCCESS == ret) break;
+        }
+        RegCloseKey(hUsers);
     }
 
-    return ERROR_SUCCESS;
+    return ret;
 }
 
 static int GetWeChatWinDLLPath(wchar_t *path)
